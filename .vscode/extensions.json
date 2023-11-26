@@ -1,6 +1,8 @@
 {
     "recommendations": [
         "rust-lang.rust-analyzer",
-        "serayuzgur.crates"
+        "serayuzgur.crates",
+        "tamasfe.even-better-toml",
+        "mutantdino.resourcemonitor"
     ]
 }

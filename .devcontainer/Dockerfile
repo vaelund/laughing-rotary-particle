@@ -1,27 +1,21 @@
 
-FROM mcr.microsoft.com/devcontainers/universal:linux
+FROM mcr.microsoft.com/vscode/devcontainers/rust:0-1
 
-ARG USERNAME=vscode
-ARG USER_UID=1000
-ARG USER_GID=$USER_UID
+# Install Desktop-ENV, tools
+RUN install-packages \
+	tigervnc-standalone-server tigervnc-xorg-extension \
+	dbus dbus-x11 gnome-keyring xfce4 xfce4-terminal \
+	xdg-utils x11-xserver-utils pip
 
-ENV DEBIAN_FRONTEND=noninteractive
+# Install novnc and numpy module for it
+RUN git clone --depth 1 https://github.com/novnc/noVNC.git /opt/novnc \
+	&& git clone --depth 1 https://github.com/novnc/websockify /opt/novnc/utils/websockify \
+	&& find /opt/novnc -type d -name '.git' -exec rm -rf '{}' + \
+	&& sudo -H pip3 install numpy
+COPY .devcontainer/novnc-index.html /opt/novnc/index.html
+COPY .devcontainer/gp-vncsession /usr/bin/
 
-RUN apt-get update \
-    && apt-get -y install lldb rustup
+# Add VNC startup script
+RUN echo -e "\nexport DISPLAY=:0\n" >> /home/vscode/.bashrc
 
-    && rustup update 2>&1 \
-    && rustup component add rls rust-analysis rust-src rustfmt clippy 2>&1 \
-
-    && apt-get autoremove -y \
-    && apt-get clean -y \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN groupadd --gid $USER_GID $USERNAME \
-    && useradd -s /bin/bash --uid $USER_UID --gid $USER_GID -m $USERNAME \
-    && apt-get install -y sudo \
-    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME\
-    && chmod 0440 /etc/sudoers.d/$USERNAME \
-
-# Switch back to dialog for any ad-hoc use of apt-get
-ENV DEBIAN_FRONTEND=dialog
+RUN chmod 0755 "$(which gp-vncsession)"

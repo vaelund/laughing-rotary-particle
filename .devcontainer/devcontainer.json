@@ -16,8 +16,9 @@
 			"extensions": [
 				"rust-lang.rust-analyzer",
 				"serayuzgur.crates",
-				"bungcip.better-toml",
-				"vadimcn.vscode-lldb"
+				"vadimcn.vscode-lldb",
+				"tamasfe.even-better-toml",
+				"mutantdino.resourcemonitor"
 			]
 		}
 	}
