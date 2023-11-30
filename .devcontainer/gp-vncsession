@@ -69,8 +69,8 @@ if test ! -e /tmp/.X0-lock; then {
 	# printf '%s\n' 'session=xfce4' "geometry=${TIGERVNC_GEOMETRY:-1920x1080}" > $HOME/.vnc/config
 
 	## Create .xinit
-	# log::info 'Creating .xinit script'
-	# printf '%s\n' '#!/bin/sh' 'exec dbus-launch --exit-with-session xfce4-session;' > $HOME/.xinitrc;
+	log::info 'Creating .xinit script'
+	printf '%s\n' '#!/bin/sh' 'exec dbus-launch --exit-with-session xfce4-session;' > $HOME/.xinitrc;
 	chmod 755 "$HOME/.xinitrc"
 
 	# Start vncserver
