@@ -7,3 +7,12 @@ edition = "2021"
 
 [dependencies]
 bevy = "0.12"
+rand = { version = "0.8.5", features = ["serde"] }
+serde = { version = "1.0.193", features = ["derive"] }
+bevy_rapier2d = { version = "0.23.0", features = [ "simd-stable", "debug-render-2d", "parallel" ] }
+
+[profile.dev.package.rapier2d]
+opt-level = 3
+
+[profile.release]
+codegen-units = 1
