@@ -4,7 +4,10 @@ use bevy_rapier2d::dynamics::ExternalImpulse;
 pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(FixedUpdate, (player_movement_system,));
+        app.add_systems(
+            FixedUpdate,
+            (player_movement_system, camera_follow_player_system),
+        );
     }
 }
 
@@ -17,7 +20,7 @@ pub(crate) struct Player {
     pub(crate) rotation_impulse: f32,
 }
 
-/// Demonstrates applying rotation and movement based on keyboard input.
+/// applying torque impulse and movement impulse based on keyboard input.
 fn player_movement_system(
     time: Res<Time>,
     keyboard_input: Res<Input<KeyCode>>,
@@ -55,4 +58,17 @@ fn player_movement_system(
     let direction = transform.rotation.mul_vec3(Vec3::Y);
 
     external_impulse.impulse = Vec2::new(direction.x * magnitude, direction.y * magnitude);
+}
+
+// move camera to follow player
+fn camera_follow_player_system(
+    player_query: Query<&Transform, (With<Player>, Without<Camera>)>,
+    mut camera_query: Query<&mut Transform, (With<Camera>, Without<Player>)>,
+) {
+    if let Ok(player_transform) = player_query.get_single() {
+        for mut camera_transform in camera_query.iter_mut() {
+            camera_transform.translation = player_transform.translation;
+            // camera_transform.look_at(player_transform.translation, Vec3::X);
+        }
+    };
 }

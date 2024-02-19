@@ -4,15 +4,14 @@
 // type aliases tends to obfuscate code while offering no improvement in code cleanliness.
 #![allow(clippy::type_complexity)]
 
-//! Demonstrates rotating entities in 2D using quaternions.
-
 mod enemy;
-mod player;
-
 use crate::enemy::{RotateToPlayer, SnapToPlayer};
+mod player;
 use crate::player::Player;
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 use bevy_rapier2d::prelude::*;
+mod level;
+use level::load_level_geo;
 
 #[derive(Resource)]
 pub struct Bounds {
@@ -25,29 +24,21 @@ const DEFAULT_BOUNDS: Bounds = Bounds {
 fn main() {
     App::new()
         .add_plugins((
-            DefaultPlugins,
+            DefaultPlugins.set(ImagePlugin::default_nearest()),
             player::PlayerPlugin,
             enemy::EnemyBehaviorPlugin,
             RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0),
-            RapierDebugRenderPlugin::default(),
+            //RapierDebugRenderPlugin::default(),
         ))
         .insert_resource(Time::<Fixed>::from_hz(60.0))
         .insert_resource(DEFAULT_BOUNDS)
         .add_systems(Startup, setup)
+        .add_systems(Startup, load_level_geo)
         .add_systems(Update, bevy::window::close_on_esc)
-        .add_systems(Startup, setup_physics)
+        //.add_systems(Startup, setup_physics_demo)
         .run();
 }
 
-/// Add the game's entities to our world and creates an orthographic camera for 2D rendering.
-///
-/// The Bevy coordinate system is the same for 2D and 3D, in terms of 2D this means that:
-///
-/// * `X` axis goes from left to right (`+X` points right)
-/// * `Y` axis goes from bottom to top (`+Y` point up)
-/// * `Z` axis goes from far to near (`+Z` points towards you, out of the screen)
-///
-/// The origin is at the center of the screen.
 fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -67,11 +58,12 @@ fn setup(
                 .add(shape::Quad::new(Vec2::new(10., 20.)).into())
                 .into(),
             material: materials.add(ColorMaterial::from(Color::LIME_GREEN)),
+            transform: Transform::from_xyz(200.0, 200.0, 0.0),
             ..default()
         },
         Player {
-            movement_impulse: 10.0, // meters per second ^ 2
-            rotation_impulse: 0.01, // radians per second ^ 2
+            movement_impulse: 10.0,
+            rotation_impulse: 0.01,
         },
         RigidBody::Dynamic,
         Collider::cuboid(5.0, 10.0),
@@ -83,6 +75,7 @@ fn setup(
             impulse: Vec2::new(0.0, 0.0),
             torque_impulse: 0.0,
         },
+        Ccd::enabled(),
     ));
 
     // enemy that snaps to face the player spawns on the bottom and left
@@ -140,18 +133,4 @@ fn setup(
             rotation_speed: f32::to_radians(90.0), // degrees per second
         },
     ));
-}
-
-fn setup_physics(mut commands: Commands) {
-    /* Create the ground. */
-    commands
-        .spawn(Collider::cuboid(500.0, 50.0))
-        .insert(TransformBundle::from(Transform::from_xyz(0.0, -200.0, 0.0)));
-
-    /* Create the bouncing ball. */
-    commands
-        .spawn(RigidBody::Dynamic)
-        .insert(Collider::ball(50.0))
-        .insert(Restitution::coefficient(0.7))
-        .insert(TransformBundle::from(Transform::from_xyz(0.0, 400.0, 0.0)));
 }
